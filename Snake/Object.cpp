@@ -16,7 +16,7 @@ void StaticObject::draw(sf::RenderWindow& window)
 DynamicObject::DynamicObject(sf::Texture& texture, sf::IntRect textureRect, sf::FloatRect objRect, float speed) : StaticObject(texture, textureRect, objRect)
 {
 	this->speed = speed;
-	this->velocity = sf::Vector2f(0, 0);
+	this->velocity = sf::Vector2f(speed, 0);
 }
 
 void DynamicObject::setDirection(EDirection dir)
@@ -24,19 +24,30 @@ void DynamicObject::setDirection(EDirection dir)
 	switch (dir)
 	{
 	case EDirection::Up:
-		this->velocity = sf::Vector2f(0, -this->speed);
+		if (this->velocity.x != 0)
+		{
+			this->velocity = sf::Vector2f(0, -this->speed);
+		}
 		break;
 	case EDirection::Right:
-		this->velocity = sf::Vector2f(this->speed, 0);
+		if (this->velocity.y != 0)
+		{
+			this->velocity = sf::Vector2f(this->speed, 0);
+		}
 		break;
 	case EDirection::Down:
-		this->velocity = sf::Vector2f(0, this->speed);
+		if (this->velocity.x != 0)
+		{
+			this->velocity = sf::Vector2f(0, this->speed);
+		}
 		break;
 	case EDirection::Left:
-		this->velocity = sf::Vector2f(-this->speed, 0);
+		if (this->velocity.y != 0)
+		{
+			this->velocity = sf::Vector2f(-this->speed, 0);
+		}
 		break;
 	}
-	
 }
 
 void DynamicObject::move(float timer)

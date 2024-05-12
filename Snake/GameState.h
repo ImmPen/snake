@@ -11,7 +11,14 @@ public:
 	void UpdateGame();
 	void HandleInput();
 	void RestartGame();
+	
 private:
+	void CreateLevel();
+	bool HandleCollision();
+
+	const sf::Vector2i textureTileSize{ 8, 8 };
+	const sf::Vector2f drawScale = { 1.f, 1.f };
+	const sf::Vector2f tileSize = { textureTileSize.x * drawScale.x,  textureTileSize.y * drawScale.y };
 	Player player;
 	Apple apple;
 	Level level;
@@ -20,8 +27,5 @@ private:
 	sf::Texture tileSetTexture;
 	sf::Clock clock;
 	sf::RenderWindow& window;
-	const sf::Vector2i textureTileSize;
-	const sf::Vector2f drawScale;
-	const sf::Vector2f tileSize;
 };
 
