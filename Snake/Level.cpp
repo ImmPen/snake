@@ -1,55 +1,92 @@
 #include "Level.h"
 #include <fstream>
+#include "GameSettings.h"
 
-void LevelDescriptor::loadFromFile(std::string fileName)
+namespace SnakeGame
 {
-	std::ifstream in(fileName);
-	if (!in.is_open())
+	void LevelDescriptor::loadFromFile(std::string fileName)
 	{
-		for (int i = 0; i < 75; i++)
+		std::ifstream in(fileName);
+		if (!in.is_open())
 		{
-			this->levelSymbols.push_back({});
-			for (int j = 0; j < 100; j++)
+			for (int i = 0; i < MAP_HEIGHT; i++)
 			{
-				this->levelSymbols[i].push_back('.');
-			}
-		}
-	}
-	else
-	{
-		int i = 0;
-		levelSymbols.push_back({});
-		while (!in.eof())
-		{
-			char sym;
-			in.get(sym);
-			if (sym == '\n')
-			{
-				i++;
-				if (!in.eof())
+				this->levelSymbols.push_back({});
+				for (int j = 0; j < MAP_WIDTH; j++)
 				{
-					this->levelSymbols.push_back({});
+					this->levelSymbols[i].push_back('.');
 				}
 			}
-			else
+		}
+		else
+		{
+			int i = 0;
+			levelSymbols.push_back({});
+			while (!in.eof())
 			{
-				this->levelSymbols[i].push_back(sym);
-			}			
+				char sym;
+				in.get(sym);
+				if (sym == '\n')
+				{
+					i++;
+					if (!in.eof())
+					{
+						this->levelSymbols.push_back({});
+					}
+				}
+				else
+				{
+					this->levelSymbols[i].push_back(sym);
+				}
+			}
+		}
+		in.close();
+	}
+
+	void DrawLevel(Level& level, sf::RenderWindow& win)
+	{
+		for (int i = 0; i < level.tiles.size(); i++)
+		{
+			for (int j = 0; j < level.tiles[i].size(); j++)
+			{
+				const Tile& tile = level.tiles[i][j];
+				sf::Sprite& sprite = level.tileTextureTypeToSprite[tile.textureType];
+				sprite.setPosition(tileSize.x * j, tileSize.y * i);
+				win.draw(sprite);
+			}
 		}
 	}
-	in.close();
-}
 
-void Level::draw(sf::RenderWindow& win)
-{
-	for (int i = 0; i < this->tiles.size(); i++)
+	Level CreateLevel(LevelDescriptor& levelDescriptor)
 	{
-		for (int j = 0; j < this->tiles[i].size(); j++)
+		Level level;
+		for (int i = 0; i < levelDescriptor.levelSymbols.size(); i++)
 		{
-			const Tile& tile = this->tiles[i][j];
-			sf::Sprite& sprite = this->tileTextureTypeToSprite[tile.textureType];
-			sprite.setPosition(8 * j, 8 * i);
-			win.draw(sprite);
+			level.tiles.push_back({});
+			for (int j = 0; j < levelDescriptor.levelSymbols[i].size(); j++)
+			{
+				Tile tile;
+				if (levelDescriptor.levelSymbols[i][j] == '#')
+				{
+					tile.collisionType = ETileCollisionType::Collision;
+					tile.textureType = ETileTextureType::Wall;
+				}
+				else if (levelDescriptor.levelSymbols[i][j] == '.')
+				{
+					tile.collisionType = ETileCollisionType::NoCollision;
+					tile.textureType = ETileTextureType::Ground;
+				}
+				level.tiles[i].push_back(tile);
+			}
 		}
+
+		for (const auto& tileTextureTypeToRect : levelDescriptor.tileTextureTypeToTextureRect)
+		{
+			sf::Sprite sprite;
+			sprite.setTexture(levelDescriptor.tileSetTexture);
+			sprite.setTextureRect(tileTextureTypeToRect.second);
+			level.tileTextureTypeToSprite[tileTextureTypeToRect.first] = sprite;
+		}
+		return level;
 	}
 }

@@ -3,38 +3,41 @@
 #include <vector>
 #include <map>
 
-enum class ETileTextureType
+namespace SnakeGame
 {
-	Ground,
-	Wall
-};
+	enum class ETileTextureType
+	{
+		Ground,
+		Wall
+	};
 
-enum class ETileCollisionType
-{
-	NoCollision,
-	Collision
-};
+	enum class ETileCollisionType
+	{
+		NoCollision,
+		Collision
+	};
 
-struct Tile
-{
-	ETileCollisionType collisionType;
-	ETileTextureType textureType;
-};
+	struct Tile
+	{
+		ETileCollisionType collisionType;
+		ETileTextureType textureType;
+	};
 
-class Level
-{
-public:
-	void draw(sf::RenderWindow& win);
+	struct Level
+	{
+		std::vector<std::vector<Tile>> tiles;
+		std::map<ETileTextureType, sf::Sprite> tileTextureTypeToSprite;
+	};
 
-	std::vector<std::vector<Tile>> tiles;
-	std::map<ETileTextureType, sf::Sprite> tileTextureTypeToSprite;
-};
+	struct LevelDescriptor
+	{
+		void loadFromFile(std::string fileName);
+		std::vector<std::vector<char>> levelSymbols;
+		std::map<ETileTextureType, sf::IntRect> tileTextureTypeToTextureRect;
+		sf::Texture tileSetTexture;
+	};
 
-class LevelDescriptor
-{
-public:
-	void loadFromFile(std::string fileName);
-
-	std::vector<std::vector<char>> levelSymbols;
-	std::map<ETileTextureType, sf::IntRect> tileTextureTypeToTextureRect;
-};
+	void DrawLevel(Level& level, sf::RenderWindow& win);
+	
+	Level CreateLevel(LevelDescriptor& levelDescriptor);
+}
