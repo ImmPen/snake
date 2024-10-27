@@ -7,6 +7,8 @@ namespace SnakeGame
 	const int MAP_WIDTH = 100; //in tiles
 	const int MAP_HEIGHT = 75; //in tiles
 	const float BASE_PLAYER_SPEED = 5; // tiles per second
+	const int PAUSE_DELAY = 3; //in seconds
+	const int NUM_RECORDS_IN_TABLE = 5;
 
 	const sf::Vector2i textureTileSize{ 8, 8 };
 	const sf::Vector2f drawScale = { 1.f, 1.f };

@@ -6,7 +6,7 @@
 
 namespace SnakeGame
 {
-	class Game;
+	struct Game;
 
 	struct GameStatePlayingData
 	{
@@ -26,7 +26,7 @@ namespace SnakeGame
 		//UI data
 		sf::Text scoreText;
 	};
-
+	bool IfAppleInBounds(Apple& apple, Level& level, Player& player);
 	void InitGameStatePlaying(GameStatePlayingData& data, Game& game);
 	void ShutdownGameStatePlaying(GameStatePlayingData& data, Game& game);
 	void HandleGameStatePlayingWindowEvent(GameStatePlayingData& data, Game& game, const sf::Event& event);

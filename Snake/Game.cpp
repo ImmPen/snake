@@ -2,14 +2,66 @@
 #include "GameSettings.h"
 #include "GameStatePlaying.h"
 #include "GameStateGameOver.h"
+#include "GameStateMainMenu.h"
+#include "GameStatePause.h"
+#include "GameStateRecords.h"
+#include <fstream>
 
 namespace SnakeGame
 {
+	void SwitchDifficult(Game& game, GameDifficult difficullt)
+	{
+		game.difficult = difficullt;
+	}
+
+	void LoadTableFromFile(std::vector<int>& recordsTable, std::string tablePath)
+	{
+		std::ifstream in(tablePath);
+		if (!in.is_open())
+		{
+			for (int i = 0; i < NUM_RECORDS_IN_TABLE; i++)
+			{
+				recordsTable.push_back(0);
+			}
+		}
+		else
+		{
+			while (!in.eof())
+			{
+				int record;
+				while (in >> record)
+				{
+					recordsTable.push_back(record);
+				}
+			}
+		}
+		in.close();
+	}
+
+	void TypeTableToFile(std::vector<int>& recordsTable, std::string tablePath)
+	{
+		std::fstream out(tablePath);
+		int i = 0;
+		for (auto it = recordsTable.begin(); it != recordsTable.end() && i < NUM_RECORDS_IN_TABLE; it++, i++)
+		{
+			out << *it << "\n";
+		}
+		out.close();
+	}
+
 	void InitGame(Game& game)
 	{
 		game.gameStateChangeType = GameStateChangeType::None;
 		game.pendingGameStateType = GameStateType::None;
-		SwitchGameState(game, GameStateType::Playing);
+		SwitchGameState(game, GameStateType::MainMenu);
+
+		std::string musicPath = RESOURCES_PATH + "Clinthammer__Background_Music.wav";
+		std::string eatSoundPath = RESOURCES_PATH + "Owlstorm__Snake_hit.wav";
+		std::string deadSoundPath = RESOURCES_PATH + "Maodin204__Lose.wav";
+		InitSoundManager(game.soundManager, musicPath, eatSoundPath, deadSoundPath);
+
+		std::string tablePath = RESOURCES_PATH + "Records.txt";
+		LoadTableFromFile(game.recordsTable, tablePath);
 	}
 
 	void HandleWindowEvents(Game& game, sf::RenderWindow& window)
@@ -37,6 +89,7 @@ namespace SnakeGame
 		}
 		game.gameStateChangeType = GameStateChangeType::None;
 		game.pendingGameStateType = GameStateType::None;
+		TypeTableToFile(game.recordsTable, RESOURCES_PATH + "Records.txt");
 	}
 	
 	bool UpdateGame(Game& game, float& timer)
@@ -46,12 +99,14 @@ namespace SnakeGame
 		case GameStateChangeType::Pop:
 			if (game.gameStateStack.size() > 0)
 			{
+				ShutdownGameState(game, game.gameStateStack.back());
 				game.gameStateStack.pop_back();
 			}
 			break;
 		case GameStateChangeType::Switch:
-			if (game.gameStateStack.size() > 0)
+			while (game.gameStateStack.size() > 0)
 			{
+				ShutdownGameState(game, game.gameStateStack.back());
 				game.gameStateStack.pop_back();
 			}
 			break;
@@ -67,6 +122,7 @@ namespace SnakeGame
 		game.gameStateChangeType = GameStateChangeType::None;
 		if (game.gameStateStack.size() > 0)	// Обновляем игру
 		{
+			PlayMusic(game.soundManager.music, game);
 			UpdateGameState(game, game.gameStateStack.back(), timer);
 			return true;
 		}
@@ -110,6 +166,20 @@ namespace SnakeGame
 			state.data = new GameStateGameOverData();
 			InitGameStateGameOver(*(GameStateGameOverData*)state.data, game);
 			break;
+		case GameStateType::MainMenu:
+			state.data = new GameStateMainMenuData();
+			InitGameStateMainMenu(*(GameStateMainMenuData*)state.data, game);
+			break;
+		case GameStateType::Pause:
+		{
+			state.data = new GameStatePauseData();
+			InitGameStateExitDialog(*(GameStatePauseData*)state.data, game);
+			break;
+		}
+		case GameStateType::Records:
+			state.data = new GameStateRecordsData();
+			InitGameStateRecords(*(GameStateRecordsData*)state.data, game);
+			break;
 		default:
 			break;
 		}
@@ -125,6 +195,17 @@ namespace SnakeGame
 		case GameStateType::GameOver:
 			delete (GameStateGameOverData*)state.data;
 			break;
+		case GameStateType::MainMenu:
+			delete (GameStateMainMenuData*)state.data;
+			break;
+		case GameStateType::Pause:
+		{
+			delete (GameStatePauseData*)state.data;
+			break;
+		}
+		case GameStateType::Records:
+			delete (GameStateRecordsData*)state.data;
+			break;
 		default:
 			break;
 		}
@@ -138,6 +219,17 @@ namespace SnakeGame
 			break;
 		case GameStateType::GameOver:
 			HandleGameStateGameOverWindowEvent(*(GameStateGameOverData*)state.data, game, event);
+			break;
+		case GameStateType::MainMenu:
+			HandleGameStateMainMenuWindowEvent(*(GameStateMainMenuData*)state.data, game, event);
+			break;
+		case GameStateType::Pause:
+		{
+			HandleGameStateExitDialogWindowEvent(*(GameStatePauseData*)state.data, game, event);
+			break;
+		}
+		case GameStateType::Records:
+			HandleGameStateRecordsEvent(*(GameStateRecordsData*)state.data, game, event);
 			break;
 		default:
 			break;
@@ -153,6 +245,19 @@ namespace SnakeGame
 		case GameStateType::GameOver:
 			UpdateGameStateGameOver(*(GameStateGameOverData*)state.data, game, timeDelta);
 			break;
+		case GameStateType::MainMenu:
+			UpdateGameStateMainMenu(*(GameStateMainMenuData*)state.data, game, timeDelta);
+			break;
+		case GameStateType::Pause:
+		{
+			UpdateGameStateExitDialog(*(GameStatePauseData*)state.data, game, timeDelta);
+			break;
+		}
+		case GameStateType::Records:
+		{
+			UpdateGameStateRecords(*(GameStateRecordsData*)state.data, game, timeDelta);
+			break;
+		}
 		default:
 			break;
 		}
@@ -167,6 +272,19 @@ namespace SnakeGame
 		case GameStateType::GameOver:
 			DrawGameStateGameOver(*(GameStateGameOverData*)state.data, game, window);
 			break;
+		case GameStateType::MainMenu:
+			DrawGameStateMainMenu(*(GameStateMainMenuData*)state.data, game, window);
+			break;
+		case GameStateType::Pause:
+		{
+			DrawGameStateExitDialog(*(GameStatePauseData*)state.data, game, window);
+			break;
+		}
+		case GameStateType::Records:
+		{
+			DrawGameStateRecords(*(GameStateRecordsData*)state.data, game, window);
+			break;
+		}
 		default:
 			break;
 		}

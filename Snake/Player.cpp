@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "GameSettings.h"
+#include "Game.h"
 
 namespace SnakeGame
 {
@@ -21,6 +22,7 @@ namespace SnakeGame
 		player.tailSprite.setOrigin({ tileSize.x / 2, tileSize.y / 2 });
 		player.head = head;
 		player.last = tail;
+		player.speed = BASE_PLAYER_SPEED;
 	}
 	void DrawPlayer(Player& player, sf::RenderWindow& window)
 	{

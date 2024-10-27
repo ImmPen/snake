@@ -18,11 +18,7 @@
      {
          sf::Event event;
 
-         while (window.pollEvent(event))
-         {
-             if (event.type == sf::Event::Closed)
-                 window.close();
-         }
+         SnakeGame::HandleWindowEvents(game, window);
          timer += clock.getElapsedTime().asSeconds();
          clock.restart();
          if (SnakeGame::UpdateGame(game, timer))

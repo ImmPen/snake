@@ -1,9 +1,11 @@
 #pragma once
 #include <random>
 #include <vector>
+#include <unordered_map>
 #include "Player.h"
 #include "Level.h"
 #include "Apple.h"
+#include "SoundManager.h"
 
 namespace SnakeGame
 {
@@ -13,7 +15,8 @@ namespace SnakeGame
 		MainMenu,
 		Playing,
 		GameOver,
-		Pause
+		Pause,
+		Records
 	};
 
 	struct GameState
@@ -30,12 +33,35 @@ namespace SnakeGame
 		Switch
 	};
 
+	enum GameDifficult
+	{
+		EASY_DIFFICULT = 1,
+		MID_DIFFICULT = 2,
+		HIGH_DIFFICULT = 3
+	};
+
+	enum class GameOptions : std::uint8_t
+	{
+		MUSIC_ON = 0x01,
+		SOUNDS_ON = 0x02,
+		DEFAULT = MUSIC_ON | SOUNDS_ON,
+		Empty = 0
+	};
+
 	struct Game
 	{
 		std::vector<GameState> gameStateStack;
 		GameStateChangeType gameStateChangeType = GameStateChangeType::None;
 		GameStateType pendingGameStateType = GameStateType::None;
+
+		GameOptions options = GameOptions::DEFAULT;
+		GameDifficult difficult = GameDifficult::EASY_DIFFICULT;
+		SoundManager soundManager;
+		std::vector<int> recordsTable;
+		int currentScore = 0;
 	};
+
+	void SwitchDifficult(Game& game, GameDifficult difficullt);
 
 	void InitGame(Game& game);
 	void HandleWindowEvents(Game& game, sf::RenderWindow& window);

@@ -49,6 +49,9 @@ namespace SnakeGame
 	}
 	void ShutdownGameStatePlaying(GameStatePlayingData& data, Game& game)
 	{
+		game.currentScore = data.numEatenApples;
+		game.recordsTable.push_back(data.numEatenApples);
+		std::sort(game.recordsTable.begin(), game.recordsTable.end(), std::greater<>());
 		DestroyPlayer(data.player);
 	}
 
@@ -80,24 +83,26 @@ namespace SnakeGame
 		{
 			data.player.direction = EDirection::Left;
 		}
-		if (timeDelta > 1.f / data.player.speed)
+		if (timeDelta > 1.f / (BASE_PLAYER_SPEED * game.difficult))
 		{
 			MovePlayer(data.player);
 			timeDelta = 0;
 		}
 		if (data.player.head->position == data.apple.position)
 		{
-			data.numEatenApples++;
+			data.numEatenApples += game.difficult;
 			do
 			{
 				GetNewPosition(data.apple);
 			} while (!IfAppleInBounds(data.apple, data.level, data.player));
 			AddTail(data.player);
+			PlaySound(Sounds::eatSound, game);
 		}
 		if (data.level.tiles[data.player.head->position.y][data.player.head->position.x].collisionType == ETileCollisionType::Collision
 			|| HeadIntersectsTail(data.player))
 		{
-			PushGameState(game, GameStateType::GameOver);
+			PlaySound(Sounds::deadSound, game);
+			SwitchGameState(game, GameStateType::GameOver);
 		}
 	}
 	void DrawGameStatePlaying(GameStatePlayingData& data, Game& game, sf::RenderWindow& window)
